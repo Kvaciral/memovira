@@ -8,7 +8,7 @@ with open("rooms.json", "r") as json_rooms:
     room_data = json.load(json_rooms)
 
 
-class Placeholder(object):
+class Avatar(object):
     def __init__(self):
         self.curroom = "main"
         self.firstvisit = True
@@ -26,7 +26,7 @@ class Placeholder(object):
 
 def add_entries(entry):
     try:
-        c.execute('INSERT INTO "{}" VALUES (?, ?)'.replace("{}", player.curroom), (entry, 0))
+        c.execute('INSERT INTO "{}" VALUES (?, ?)'.replace("{}", avatar.curroom), (entry, 0))
         conn.commit()
     except sqlite3.OperationalError as error:
         print(error)
@@ -34,14 +34,14 @@ def add_entries(entry):
 
 def change_curroom(room):
     if room in room_data["rooms"]:
-        player.set_curroom(room)
+        avatar.set_curroom(room)
     else:
         print("No such room")
 
 
 def change_roomdesc(newdesc):
     try:
-        room_data["rooms"][player.get_curroom()]["desc"] = newdesc
+        room_data["rooms"][avatar.get_curroom()]["desc"] = newdesc
     
         with open("rooms.json", "w") as f:
             json.dump(room_data, f)
@@ -65,16 +65,16 @@ def change_prio(args):
         print("Only integers please!")
         return None
 
-    c.execute('Update "{}" set priority = (?) where rowid = (?)'.replace("{}", player.get_curroom()), (args_list_int[1], get_rowid(args_list_int[0])))
+    c.execute('Update "{}" set priority = (?) where rowid = (?)'.replace("{}", avatar.get_curroom()), (args_list_int[1], get_rowid(args_list_int[0])))
     conn.commit()
 
 
 def create_room(room):
     room_data["rooms"][room] = {"desc": "", "exits": [], "parent": ""}
     room_data["rooms"][room]["desc"] = room
-    room_data["rooms"][room]["exits"].append(player.get_curroom())
-    room_data["rooms"][room]["parent"] = player.get_curroom()
-    room_data["rooms"][player.get_curroom()]["exits"].append(room)
+    room_data["rooms"][room]["exits"].append(avatar.get_curroom())
+    room_data["rooms"][room]["parent"] = avatar.get_curroom()
+    room_data["rooms"][avatar.get_curroom()]["exits"].append(room)
 
     with open("rooms.json", "w") as f:
         json.dump(room_data, f)
@@ -89,7 +89,7 @@ def create_roomtable(roomname):
 def delete_entry(id):
     try:
         rowid = get_rowid(int(id))
-        c.execute('DELETE from "{}" where rowid = (?)'.replace("{}", player.curroom), rowid)
+        c.execute('DELETE from "{}" where rowid = (?)'.replace("{}", avatar.curroom), rowid)
         conn.commit()
     except sqlite3.Error as error:
         print("Failed to delete record from sqlite table", error)
@@ -100,10 +100,10 @@ def delete_entry(id):
 
 def destroy_room(room):
     if room == "room":
-        room = player.get_curroom()
+        room = avatar.get_curroom()
 
-    if player.get_curroom() == room:
-        player.set_curroom(room_data["rooms"][room]["parent"])
+    if avatar.get_curroom() == room:
+        avatar.set_curroom(room_data["rooms"][room]["parent"])
 
     room_data["rooms"][room_data["rooms"][room]["parent"]]["exits"].remove(room)
     room_data["rooms"].pop(room, None)
@@ -114,7 +114,7 @@ def destroy_room(room):
 
 def destroy_roomtable(table):
     if table == "room":
-        table = player.get_curroom()
+        table = avatar.get_curroom()
 
     try:
         c.execute('DROP TABLE "{}"'.replace("{}", table))
@@ -125,7 +125,7 @@ def destroy_roomtable(table):
 
 def get_rowid(query):
     try:
-        c.execute('SELECT rowid from "{}"'.replace("{}", player.curroom))
+        c.execute('SELECT rowid from "{}"'.replace("{}", avatar.curroom))
         rows = c.fetchall()
         return str(rows[query-1][0])
     except sqlite3.OperationalError as error: 
@@ -145,10 +145,10 @@ def list_tablerooms():
 
 
 def look(auto=False):
-    if auto == False or player.checkvisit():
+    if auto == False or avatar.checkvisit():
         try:
-            print(room_data["rooms"][player.curroom]["desc"])
-            print("Exits are: " + str(room_data["rooms"][player.curroom]["exits"]))
+            print(room_data["rooms"][avatar.curroom]["desc"])
+            print("Exits are: " + str(room_data["rooms"][avatar.curroom]["exits"]))
         except KeyError:
             print("No such room!!")
 
@@ -159,7 +159,7 @@ def show_commands():
 
 def sort_prio():
     try:
-        c.execute('SELECT * FROM "{}" ORDER BY priority DESC'.replace("{}", player.get_curroom()))
+        c.execute('SELECT * FROM "{}" ORDER BY priority DESC'.replace("{}", avatar.get_curroom()))
         rows = c.fetchall()
         for index, row in enumerate(rows):
             print(str(index+1) + " - " + row[0] + " & " + str(row[1]))
@@ -169,7 +169,7 @@ def sort_prio():
 
 def view_entries():
     try:
-        c.execute('SELECT * FROM "{}"'.replace("{}", player.curroom))
+        c.execute('SELECT * FROM "{}"'.replace("{}", avatar.curroom))
         rows = c.fetchall()
         for index, row in enumerate(rows):
             print(str(index+1) + " - " + row[0] + " & " + str(row[1]))
@@ -177,7 +177,7 @@ def view_entries():
         print(error)
 
 
-player = Placeholder()  
+avatar = Avatar()  
     
 while True:
     look(auto=True)
