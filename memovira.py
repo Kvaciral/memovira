@@ -70,9 +70,10 @@ def change_prio(args):
 
 
 def create_room(room):
-    room_data["rooms"][room] = {"desc": "", "exits": []}
+    room_data["rooms"][room] = {"desc": "", "exits": [], "parent": ""}
     room_data["rooms"][room]["desc"] = room
     room_data["rooms"][room]["exits"].append(player.get_curroom())
+    room_data["rooms"][room]["parent"] = player.get_curroom()
     room_data["rooms"][player.get_curroom()]["exits"].append(room)
 
     with open("rooms.json", "w") as f:
@@ -98,16 +99,23 @@ def delete_entry(id):
 
 
 def destroy_room(room):
+    if room == "room":
+        room = player.get_curroom()
+
+    if player.get_curroom() == room:
+        player.set_curroom(room_data["rooms"][room]["parent"])
+
+    room_data["rooms"][room_data["rooms"][room]["parent"]]["exits"].remove(room)
     room_data["rooms"].pop(room, None)
 
     with open("rooms.json", "w") as f:
         json.dump(room_data, f)
 
-    if player.get_curroom() == room:
-        player.set_curroom("main")
-
 
 def destroy_roomtable(table):
+    if table == "room":
+        table = player.get_curroom()
+
     try:
         c.execute('DROP TABLE "{}"'.replace("{}", table))
         conn.commit()
@@ -127,7 +135,7 @@ def get_rowid(query):
 
 
 def list_rooms():
-    print(sorted([*room_data["rooms"]]))
+    print(sorted([*room_data["rooms"]])) 
 
 
 def list_tablerooms():
@@ -193,8 +201,8 @@ while True:
         elif command[0] == "delete":
             delete_entry(command[1])
         elif command[0] == "destroy":
-            destroy_room(command[1])
             destroy_roomtable(command[1])
+            destroy_room(command[1])
         elif command[0] == "exit":
             conn.close()
             break

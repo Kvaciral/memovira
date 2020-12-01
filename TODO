@@ -1,6 +1,6 @@
 available commands, first universal, more specific and exclusions (e.g. for main) later
 exclude creating "main"
-brancehes from main, e.g. activities, stuff and dailystuff (e.g. household-chores)
+branches from main, e.g. activities, stuff and dailystuff (e.g. household-chores)
 extra field for extra info for tasks/stuff
 subtasks/stuff 
 link to lightning/bitcoin-rpc?
@@ -17,5 +17,3 @@ tab for autocomplete
 scroll through previous commands?
 cursor keys should work as espected, no escape-seqs
 main should be indestructable (atm: it's deleted from the json)
-"destroy room" should destroy current room
-if current room is destroyed, player should return to branch ... root/main, keep errorchecks though..?
