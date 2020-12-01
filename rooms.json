@@ -1,0 +1,8 @@
+{
+    "rooms": {
+        "main": {
+            "desc": "This is just a placeholder, have a nice placeholdering day!!",
+            "exits": []
+        } 
+    }
+}
