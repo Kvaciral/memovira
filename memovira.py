@@ -63,14 +63,14 @@ def add_entries(entry):
         c.execute('INSERT INTO "{}" VALUES (?, ?)'.replace("{}", avatar.curroom), (entry, 0))
         conn.commit()
     except sqlite3.OperationalError as error:
-        print(error)
+        error_output(error)
 
 
 def change_curroom(room):
     if room in room_data["rooms"]:
         avatar.set_curroom(room)
     else:
-        print("No such room")
+        error_output("No such room!!")
 
 
 def change_roomdesc(newdesc):
@@ -80,23 +80,23 @@ def change_roomdesc(newdesc):
         with open("rooms.json", "w") as f:
             json.dump(room_data, f)
     except KeyError:
-        print("No such room!!")
+        error_output("No such room!!")
 
 
 def change_prio(args):
     args_list_str = args.split( )
 
     if len(args_list_str) == 1:
-        print("Nog enough arguments!")
+        error_output("Nog enough arguments!")
         return None
     elif len(args_list_str) > 2:
-        print("Stop argueing!")
+        error_output("Stop argueing!")
         return None
 
     args_list_int = [int(arg) for arg in args.split( ) if arg.isdigit()]
 
     if len(args_list_int) != 2:
-        print("Only integers please!")
+        error_output("Only integers please!")
         return None
 
     c.execute('Update "{}" set priority = (?) where rowid = (?)'.replace("{}", avatar.get_curroom()), (args_list_int[1], get_rowid(args_list_int[0])))
@@ -130,10 +130,10 @@ def delete_entry(id):
         c.execute('DELETE from "{}" where rowid = (?)'.replace("{}", avatar.curroom), rowid)
         conn.commit()
     except sqlite3.Error as error:
-        print("Failed to delete record from sqlite table", error)
+        error_output("Failed to delete record from sqlite3 table: " + error)
     except ValueError as error:
         if rowid != None:
-            print("Please enter an integer")
+            error_output("Please enter an integer")
 
 
 def destroy_room(room):
@@ -158,7 +158,11 @@ def destroy_roomtable(table):
         c.execute('DROP TABLE "{}"'.replace("{}", table))
         conn.commit()
     except sqlite3.OperationalError as error:
-        print(error)
+        error_output(error)
+
+
+def error_output(error):
+    print(colorize([COLORS["cyber yellow"], error]))
 
 
 def get_rowid(query):
@@ -167,9 +171,9 @@ def get_rowid(query):
         rows = c.fetchall()
         return str(rows[query-1][0])
     except sqlite3.OperationalError as error: 
-        print(error)
+        error_output(error)
     except IndexError as error:
-        print("Hmmz.. can't find that one!")
+        error_output("Hmmz.. can't find that one!")
 
 
 def list_rooms():
@@ -188,7 +192,7 @@ def look(auto=False):
             print(colorize([COLORS["metallic blue"], room_data["rooms"][avatar.curroom]["desc"]]))
             print(colorize([COLORS["han purple"], "Exits are: " + str(room_data["rooms"][avatar.curroom]["exits"])]))            
         except KeyError:
-            print("No such room!!")
+            error_output("No such room!!")
 
 
 def show_commands():
@@ -202,7 +206,7 @@ def sort_prio():
         for index, row in enumerate(rows):
             print(str(index+1) + " - " + row[0] + " & " + str(row[1]))
     except sqlite3.OperationalError as error:
-        print(error)
+        error_output(error)
 
 
 def view_entries():
@@ -212,7 +216,7 @@ def view_entries():
         for index, row in enumerate(rows):
             print(colorize([COLORS["violet"], str(index+1) + " - " + row[0] + " & " + str(row[1])]))
     except sqlite3.OperationalError as error:
-        print(error)
+        error_output(error)
 
 
 avatar = Avatar()
@@ -261,6 +265,6 @@ while True:
         elif command[0] == "view":
             view_entries()
         else:
-            print("Command not recognised")
+            error_output("Command not recognised")
     except IndexError as error:
-        print("Pretty please provide an argument <3")
+        error_output("Pretty please provide an argument <3")
