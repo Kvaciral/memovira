@@ -1,8 +1,30 @@
-import sqlite3
-import json
+import json, sqlite3
 
 conn = sqlite3.connect('dbmemovira.sqlite3')
 c = conn.cursor()
+
+COLORS = {"beige": "#f5f5dc",
+          "brown": "#a52a2a",
+          "crimson red": "#990000",
+          "cyber yellow": "#ffd300",
+          "dark orange": "#ff8c00",
+          "forest green": "#228B22",
+          "fuchsia": "#ff00ff",
+          "golden brown": "#996515",
+          "grey": "#808080",
+          "han purple": "#5218fa",
+          "indigo": "4b0082",
+          "jet black": "#343434",
+          "magenta": "#ff00ff",
+          "metallic blue": "#4682b4",
+          "pearl white": "#eae0c8",
+          "scarlet": "#8c1717",
+          "silver": "#c0c0c0",
+          "smoky black": "#100C08",
+          "tangerine": "#f28500",
+          "violet": "#ee82ee",
+          "white": "#ffffff"
+}
 
 with open("rooms.json", "r") as json_rooms:
     room_data = json.load(json_rooms)
@@ -22,6 +44,18 @@ class Avatar(object):
         self.firstvisit = True
     def get_curroom(self):
         return self.curroom
+
+
+class TermColors:
+    @staticmethod
+    def rgb(hh):
+        '''HTML color to terminal escape sequence'''
+        assert(hh[0] == '#' and len(hh) == 7)
+        rr = int(hh[1:3], 16)
+        gg = int(hh[3:5], 16)
+        bb = int(hh[5:7], 16)
+        return f'\x1b[38;2;{rr};{gg};{bb}m'
+    reset = '\x1b[0m' # reset to terminal defaults
 
 
 def add_entries(entry):
@@ -67,6 +101,10 @@ def change_prio(args):
 
     c.execute('Update "{}" set priority = (?) where rowid = (?)'.replace("{}", avatar.get_curroom()), (args_list_int[1], get_rowid(args_list_int[0])))
     conn.commit()
+
+
+def colorize(color):
+    return T.rgb(color[0]) + color[1] + T.reset
 
 
 def create_room(room):
@@ -135,7 +173,7 @@ def get_rowid(query):
 
 
 def list_rooms():
-    print(sorted([*room_data["rooms"]])) 
+    print(colorize([COLORS["forest green"], str(sorted([*room_data["rooms"]]))])) 
 
 
 def list_tablerooms():
@@ -147,8 +185,8 @@ def list_tablerooms():
 def look(auto=False):
     if auto == False or avatar.checkvisit():
         try:
-            print(room_data["rooms"][avatar.curroom]["desc"])
-            print("Exits are: " + str(room_data["rooms"][avatar.curroom]["exits"]))
+            print(colorize([COLORS["metallic blue"], room_data["rooms"][avatar.curroom]["desc"]]))
+            print(colorize([COLORS["han purple"], "Exits are: " + str(room_data["rooms"][avatar.curroom]["exits"])]))            
         except KeyError:
             print("No such room!!")
 
@@ -172,17 +210,19 @@ def view_entries():
         c.execute('SELECT * FROM "{}"'.replace("{}", avatar.curroom))
         rows = c.fetchall()
         for index, row in enumerate(rows):
-            print(str(index+1) + " - " + row[0] + " & " + str(row[1]))
+            print(colorize([COLORS["violet"], str(index+1) + " - " + row[0] + " & " + str(row[1])]))
     except sqlite3.OperationalError as error:
         print(error)
 
 
-avatar = Avatar()  
-    
+avatar = Avatar()
+T = TermColors()
+
 while True:
     look(auto=True)
 
-    cmd = input("------------------------------\n")
+    print(colorize([COLORS["scarlet"], "------------------------------"]))
+    cmd = input("")
     command = [seg.lstrip() for seg in cmd.lstrip().split(" ", 1) if seg.lstrip() != ""]
 
     try:
